@@ -19,7 +19,7 @@ class Simulator
   def run
     start = Time.now
     create_teams
-    1000.times { @season.run }
+    10000.times { @season.run }
     execution_time = Time.now - start
   end
 

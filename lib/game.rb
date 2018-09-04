@@ -9,7 +9,7 @@ module Game
     nil
   end
 
-  def self.play_postseason(home, away)
+  def self.postseason(home, away)
     result = rand(10)
     result >= 5 ? home : away
   end
