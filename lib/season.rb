@@ -1,12 +1,7 @@
 require_relative './fixtures'
 require_relative './game'
-require_relative './postseason_calculator'
+
 class Season
-
-  def initialize
-    @results = []
-
-  end
 
   def run
     reset_teams
