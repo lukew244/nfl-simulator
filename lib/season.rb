@@ -1,16 +1,15 @@
-require_relative './constants'
-require_relative './team'
 require_relative './fixtures'
 require_relative './game'
-
+require_relative './postseason_calculator'
 class Season
 
   def initialize
     @results = []
+
   end
 
   def run
-    Team.reset_all_wins
+    reset_teams
     play_regular_season
     calculate_postseason
   end
@@ -23,7 +22,7 @@ class Season
     division_winners = []
     potential_wildcards = []
     NFL::DIVISIONS.each do |division|
-      rankings = order_by_wins(division)
+      rankings = rank_teams(division)
       division_winners    << rankings[0]
       potential_wildcards << rankings[1]
       potential_wildcards << rankings[2]
@@ -54,15 +53,33 @@ class Season
     Game.postseason(superbowl.first, superbowl.last)
   end
 
-  def seed_teams(teams)
-    teams.sort_by(&:wins).reverse
+  def rank_teams(division)
+    win_order = order_by_wins(division)
+    wins = win_order.map(&:wins)
+    if clear_winner?(wins)
+      return win_order
+    else
+      return win_order #divisional tiebreaker procedure goes here
+    end
+  end
+
+  def clear_winner?(wins)
+    wins.each_index.select { |i| wins[i] == wins[0] }.count > 1
   end
 
   def order_by_wins(division)
     division.last.sort_by { |team| team.wins }.reverse
   end
 
+  def seed_teams(teams)
+    teams.sort_by(&:wins).reverse
+  end
+
   def sort_by_conference(teams)
     teams.partition {|t| t.conference == 'AFC' }
+  end
+
+  def reset_teams
+    Team.reset_all_wins
   end
 end

@@ -3,9 +3,27 @@ require_relative './constants'
 require_relative './team'
 
 class Simulator
+  attr_reader :season, :superbowl_wins
+
+  SIMULATIONS = 1000
 
   def initialize
     @season = Season.new
+    @superbowl_wins = Hash.new(0)
+  end
+
+  def run!
+    start = Time.now
+    create_teams
+    run_simulations
+    output_result(start)
+  end
+
+  def run_simulations
+    SIMULATIONS.times do |s|
+      winner = season.run
+      superbowl_wins[winner.name.to_sym] += 1
+    end
   end
 
   def create_teams
@@ -16,11 +34,10 @@ class Simulator
     end
   end
 
-  def run
-    start = Time.now
-    create_teams
-    10000.times { @season.run }
-    execution_time = Time.now - start
+  def output_result(start)
+    puts "#{SIMULATIONS} simulations, ran in #{Time.now - start} seconds"
+    puts @superbowl_wins
   end
-
 end
+
+Simulator.new.run!
