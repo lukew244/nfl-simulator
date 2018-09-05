@@ -3,10 +3,11 @@ module Game
     result = rand(10)
     if result >= 5
       home.record_win
+      [home.name, away.name]
     else
       away.record_win
+      [away.name, home.name]
     end
-    nil
   end
 
   def self.postseason(home, away)

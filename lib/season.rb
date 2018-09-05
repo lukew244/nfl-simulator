@@ -2,6 +2,11 @@ require_relative './fixtures'
 require_relative './game'
 
 class Season
+  attr_reader :teams_beaten
+
+  def initialize
+    @teams_beaten = Hash.new { |h, k| h[k] = [] }
+  end
 
   def run
     reset_teams
@@ -10,7 +15,8 @@ class Season
   end
 
   def play_regular_season
-    FIXTURES.each { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
+    b = FIXTURES.map { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
+      .map { |result| teams_beaten[result[0]] << result[1] }
   end
 
   def calculate_postseason
@@ -27,7 +33,6 @@ class Season
     wild_cards = sort_by_conference(potential_wildcards)
     afc_seeds = seed_teams(top_seeds.first) + seed_teams(wild_cards.first).first(2)
     nfc_seeds = seed_teams(top_seeds.last) + seed_teams(wild_cards.last).first(2)
-
     play_postseason(afc_seeds, nfc_seeds)
   end
 
@@ -50,16 +55,40 @@ class Season
 
   def rank_teams(division)
     win_order = order_by_wins(division)
-    wins = win_order.map(&:wins)
-    if clear_winner?(wins)
+    max_wins = win_order.map(&:wins)
+    tied_teams = count_tied(max_wins)
+    if tied_teams == 1
       return win_order
+    elsif tied_teams == 2
+      two_way_divisional_tiebreaker(win_order)
     else
-      return win_order #divisional tiebreaker procedure goes here
+      multi_way_divisional_tiebreaker(win_order)
     end
   end
 
-  def clear_winner?(wins)
-    wins.each_index.select { |i| wins[i] == wins[0] }.count > 1
+  def two_way_divisional_tiebreaker(division)
+    first_team_advantage = head_to_head(division[0].name, division[1].name)
+    if first_team_advantage > 0
+      return division
+    elsif first_team_advantage < 0
+      division[0], division[1] = division[1], division[0]
+      return division
+    else
+      return division
+    end
+  end
+
+  def multi_way_divisional_tiebreaker(win_order)
+    return win_order
+  end
+
+  def head_to_head(team_1, team_2)
+    teams_beaten[team_1].count { |beat| beat == team_2} -
+    teams_beaten[team_2].count { |beat| beat == team_1}
+  end
+
+  def count_tied(wins)
+    wins.each_index.select { |i| wins[i] == wins[0] }.count
   end
 
   def order_by_wins(division)
