@@ -5,7 +5,7 @@ require_relative './team'
 class Simulator
   attr_reader :season, :superbowl_wins
 
-  SIMULATIONS = 1000
+  SIMULATIONS = 10000
 
   def initialize
     @season = Season.new
@@ -34,8 +34,8 @@ class Simulator
     end
   end
 
-  def output_result(start)
-    puts "#{SIMULATIONS} simulations, ran in #{Time.now - start} seconds"
+  def output_result(start_time)
+    puts "#{SIMULATIONS} simulations, ran in #{Time.now - start_time} seconds"
     puts @superbowl_wins
   end
 end

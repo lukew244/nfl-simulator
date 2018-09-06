@@ -1,66 +1,56 @@
 require_relative './fixtures'
 require_relative './game'
-require_relative './tiebreaker'
+require_relative './postseason_calculator'
 
 class Season
-  attr_reader :teams_beaten
+  attr_reader :team_wins, :postseason_calculator
 
   def initialize()
-    @teams_beaten = Hash.new { |h, k| h[k] = [] }
+    @postseason_calculator = PostseasonCalculator.new
+    @team_wins = Hash.new { |h, k| h[k] = [] }
   end
 
   def run
     reset_teams
     play_regular_season
-    calculate_postseason
+    afc, nfc = postseason_calculator.run(team_wins)
+    play_postseason(afc, nfc)
   end
 
   def play_regular_season
-    b = FIXTURES.map { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
-      .map { |result| teams_beaten[result[0]] << result[1] }
-  end
-
-  def calculate_postseason
-    division_winners = []
-    potential_wildcards = []
-    tiebreaker = Tiebreaker.new(teams_beaten)
-    NFL::DIVISIONS.each do |division|
-      rankings = tiebreaker.rank_division(division)
-      division_winners    << rankings[0]
-      potential_wildcards << rankings[1]
-      potential_wildcards << rankings[2]
-    end
-
-    top_seeds = sort_by_conference(division_winners)
-    wild_cards = sort_by_conference(potential_wildcards)
-    afc_seeds = seed_teams(top_seeds.first) + seed_teams(wild_cards.first).first(2)
-    nfc_seeds = seed_teams(top_seeds.last) + seed_teams(wild_cards.last).first(2)
-    play_postseason(afc_seeds, nfc_seeds)
+    results = FIXTURES.map { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
+    save_wins(results)
   end
 
   def play_postseason(afc, nfc)
     superbowl = []
     [afc, nfc].each do |seed|
-      wildcard_winner_1 = Game.postseason(seed[2], seed[5])
-      wildcard_winner_2 = Game.postseason(seed[3], seed[4])
-      wildcard_winners = seed_teams([wildcard_winner_1, wildcard_winner_2])
-
-      divisional_winner_1 = Game.postseason(seed[0], wildcard_winners.last)
-      divisional_winner_2 = Game.postseason(seed[1], wildcard_winners.first)
-      divisional_winners = seed_teams([divisional_winner_1, divisional_winner_2])
-
+      wildcard_winners = wildcard_round(seed)
+      divisional_winners = divisional_round(seed, wildcard_winners)
       champion = Game.postseason(divisional_winners.first, divisional_winners.last)
       superbowl << champion
     end
     Game.postseason(superbowl.first, superbowl.last)
   end
 
-  def seed_teams(teams)
-    teams.sort_by(&:wins).reverse
+  def wildcard_round(seed)
+    wildcard_winner_1 = Game.postseason(seed[2], seed[5])
+    wildcard_winner_2 = Game.postseason(seed[3], seed[4])
+    seed_teams([wildcard_winner_1, wildcard_winner_2])
   end
 
-  def sort_by_conference(teams)
-    teams.partition {|t| t.conference == 'AFC' }
+  def divisional_round(seed, wildcard_winners)
+    divisional_winner_1 = Game.postseason(seed[0], wildcard_winners.last)
+    divisional_winner_2 = Game.postseason(seed[1], wildcard_winners.first)
+    seed_teams([divisional_winner_1, divisional_winner_2])
+  end
+
+  def save_wins(results)
+    results.map { |result| team_wins[result[0]] << result[1] }
+  end
+
+  def seed_teams(teams)
+    teams.sort_by(&:wins).reverse
   end
 
   def reset_teams
