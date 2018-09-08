@@ -257,3 +257,5 @@ FIXTURES = [
   {:away=>"Los Angeles Chargers", :home=>"Denver Broncos"},
   {:away=>"San Francisco 49ers", :home=>"Los Angeles Rams"}
 ]
+
+NON_DIVISIONAL_OPPONENTS = {}

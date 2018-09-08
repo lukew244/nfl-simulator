@@ -1,20 +1,14 @@
 class Tiebreaker
-  attr_reader :team_wins
 
-  def initialize(team_wins)
-    @team_wins = team_wins
-  end
-
-  def rank_division(division)
-    win_order = order_by_wins(division)
-    max_wins = win_order.map(&:wins)
-    tied_teams = count_tied(max_wins)
+  def rank_division(division_as_array)
+    division_in_win_order = order_by_wins(division_as_array.last)
+    tied_teams = count_tied(division_in_win_order)
     if tied_teams == 1
-      return win_order
+      return division_in_win_order
     elsif tied_teams == 2
-      two_way_divisional_tiebreaker(win_order)
+      two_way_divisional_tiebreaker(division_in_win_order)
     else
-      multi_way_divisional_tiebreaker(win_order)
+      multi_way_divisional_tiebreaker(division_in_win_order)
     end
   end
 
@@ -23,14 +17,50 @@ class Tiebreaker
   end
 
   def two_way_divisional_tiebreaker(division)
-    first_team_advantage = head_to_head(division[0].name, division[1].name)
+    first_team_advantage = head_to_head(division)
+    run_tiebreaker(first_team_advantage, division) {|division| division_wins_tiebreaker(division)}
+  end
+
+  def run_tiebreaker(first_team_advantage, division)
     if first_team_advantage > 0
       return division
     elsif first_team_advantage < 0
       return switch_order(division)
     else
-      return division_wins_tiebreaker(division)
+      yield(division)
     end
+  end
+
+  def division_wins_tiebreaker(division)
+    first_team_advantage = division_wins(division)
+    run_tiebreaker(first_team_advantage, division) {|division| common_games_tiebreaker(division)}
+  end
+
+  def common_games_tiebreaker(division)
+    first_team_advantage = 0
+    run_tiebreaker(first_team_advantage, division) {|division| conference_wins_tiebreaker(division) }
+  end
+
+  def conference_wins_tiebreaker(division)
+    first_team_advantage = conference_wins(division)
+    run_tiebreaker(first_team_advantage, division) {|division| return division }
+  end
+
+  def head_to_head(division)
+    division[0].teams_beat.count { |beat| beat == division[1].name } -
+    division[1].teams_beat.count { |beat| beat == division[0].name }
+  end
+
+  def division_wins(division)
+    division[0].division_wins - division[1].division_wins
+  end
+
+  def common_games(division)
+
+  end
+
+  def conference_wins(division)
+    division[0].conference_wins - division[1].conference_wins
   end
 
   def switch_order(division)
@@ -38,33 +68,11 @@ class Tiebreaker
     division
   end
 
-  def division_wins_tiebreaker(division)
-    first_team_advantage = division_wins(division)
-    if first_team_advantage > 0
-      return division
-    elsif first_team_advantage < 0
-      return switch_order(division)
-    else
-      return division
-    end
-  end
-
-  def head_to_head(team_1, team_2)
-    team_wins[team_1].count { |beat| beat == team_2 } -
-    team_wins[team_2].count { |beat| beat == team_1 }
-  end
-
-  def division_wins(division)
-    teams = division.map(&:name)
-    team_wins[teams[0]].count { |beat| teams.include?(beat) } -
-    team_wins[teams[1]].count { |beat| teams.include?(beat) }
-  end
-
-  def count_tied(wins)
-    wins.each_index.select { |i| wins[i] == wins[0] }.count
+  def count_tied(division)
+    division.map(&:wins).each_with_index.select { |wins, i| wins[i] == wins[0] }.count
   end
 
   def order_by_wins(division)
-    division.last.sort_by { |team| team.wins }.reverse
+    division.sort_by { |team| team.wins }.reverse
   end
 end

@@ -6,20 +6,18 @@ class Season
   attr_reader :team_wins, :postseason_calculator
 
   def initialize()
-    @postseason_calculator = PostseasonCalculator.new
-    @team_wins = Hash.new { |h, k| h[k] = [] }
   end
 
   def run
     reset_teams
     play_regular_season
-    afc, nfc = postseason_calculator.run(team_wins)
+    afc, nfc = PostseasonCalculator.run
     play_postseason(afc, nfc)
   end
 
   def play_regular_season
     results = FIXTURES.map { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
-    save_wins(results)
+    # save_wins(results)
   end
 
   def play_postseason(afc, nfc)

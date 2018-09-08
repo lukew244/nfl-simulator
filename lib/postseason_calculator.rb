@@ -1,11 +1,11 @@
 require_relative './tiebreaker'
 
-class PostseasonCalculator
+module PostseasonCalculator
 
-  def run(team_wins)
+  def self.run
     division_winners = []
     potential_wildcards = []
-    tiebreaker = Tiebreaker.new(team_wins)
+    tiebreaker = Tiebreaker.new
     NFL::DIVISIONS.each do |division|
       rankings = tiebreaker.rank_division(division)
       division_winners    << rankings[0]
@@ -20,11 +20,11 @@ class PostseasonCalculator
     return afc_seeds, nfc_seeds
   end
 
-  def sort_by_conference(teams)
+  def self.sort_by_conference(teams)
     teams.partition {|t| t.conference == 'AFC' }
   end
 
-  def seed_teams(teams)
+  def self.seed_teams(teams)
     teams.sort_by(&:wins).reverse
   end
 
