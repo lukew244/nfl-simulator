@@ -65,15 +65,15 @@ RSpec.describe Tiebreaker do
     expect(ranked[0].name).to eq "Jacksonville Jaguars"
   end
 
-  # it "returns multiway conference winner" do
-  #   division = [
-  #     build(:team, name: "Jacksonville Jaguars", wins: 9),
-  #     build(:team, name: "Tennessee Titans", wins: 9),
-  #     build(:team, name: "Indianapolis Colts", wins: 9),
-  #     build(:team, name: "Houston Texans")
-  #   ]
-  #   ranked = subject.rank_division(division)
-  #   expect(ranked[0].name).to eq "Tennessee Titans"
-  # end
+  it "returns multiway head to head winner" do
+    division = [
+      build(:team, name: "Jacksonville Jaguars", wins: 9, teams_beat: ["Tennessee Titans"]),
+      build(:team, name: "Tennessee Titans", wins: 9, teams_beat: ["Jacksonville Jaguars", "Indianapolis Colts"]),
+      build(:team, name: "Indianapolis Colts", wins: 9, teams_beat: ["Tennessee Titans"]),
+      build(:team, name: "Houston Texans")
+    ]
+    ranked = subject.rank_division(division)
+    expect(ranked[0].name).to eq "Tennessee Titans"
+  end
 
 end

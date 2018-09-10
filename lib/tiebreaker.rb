@@ -1,5 +1,5 @@
 require_relative './constants/non_div_opponents'
-
+require_relative './multi_tiebreaker'
 class Tiebreaker
 
   def rank_division(division_as_array)
@@ -10,7 +10,7 @@ class Tiebreaker
     elsif tied_teams == 2
       head_to_head_tiebreaker(division_in_win_order)
     else
-      return division_in_win_order #replace with multiway tiebreaker
+      MultiTiebreaker.division(division_in_win_order, tied_teams, self)
     end
   end
 

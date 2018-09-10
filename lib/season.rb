@@ -13,7 +13,7 @@ class Season
   end
 
   def play_regular_season
-    results = NFL::FIXTURES.map { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
+    NFL::FIXTURES.map { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
   end
 
   def play_postseason(afc, nfc)
