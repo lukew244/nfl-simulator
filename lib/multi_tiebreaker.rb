@@ -1,39 +1,49 @@
 module MultiTiebreaker
 
-  def self.division(division, tied_teams_count, tiebreaker)
-    sorted_order, tied_teams = head_to_head(division, tied_teams_count)
-    if tied_teams == 1
-      return sorted_order
-    elsif tied_teams == 2
-      tiebreaker.head_to_head_tiebreaker(division)
+  def self.division(teams, tiebreaker)
+    teams_and_wins = head_to_head(teams)
+    tied_teams, eliminated = split_eliminated(teams_and_wins)
+    if tied_teams.count == 1
+      return (tied_teams + eliminated).flatten
+    elsif tied_teams.count == 2
+      tiebreaker.head_to_head_tiebreaker(tied_teams) + eliminated
     else
-      puts 'three tied'
-      return sorted_order #next step
+      return teams_in_head_to_head_order #next step
     end
   end
 
-  def self.head_to_head(division, tied_teams_count)
-      tied_teams, out = division.partition.with_index { |_, index| index < tied_teams_count }
-      team_names = tied_teams.map(&:name)
-      wins = tied_teams.map do |team|
+  def self.head_to_head(teams)
+      team_names = teams.map(&:name)
+      wins = teams.map do |team|
         count = team.teams_beat.count { |beat| team_names.include?(beat) }
         [team, count]
       end
-      ordered_array = wins.sort_by(&:last).reverse
-      still_tied = ordered_array.count { |e| e[1] == ordered_array[0][1] }
-      sorted_teams = ordered_array.map { |team| team[0] } + out
-      return sorted_teams, still_tied
+      teams_in_order = wins.sort_by(&:last).reverse
     end
 
-  def self.divisional_tiebreaker(division, tied_teams_count)
-    sorted_order, tied_teams = multi_division_tiebreaker(division, tied_teams_count)
-    if tied_teams == 1
-      return sorted_order
-    elsif tied_teams == 2
-      head_to_head_tiebreaker(division)
-    else
-      puts 'three tied'
-      return sorted_order #next step
+    def self.split_eliminated(teams)
+      tied_count = teams.count { |team_record| team_record[1] == best_record(teams) }
+      teams.partition.with_index { |_, index| index < tied_count }
     end
-  end
+
+    def self.best_record(teams_in_order)
+      teams_in_order[0][1]
+    end
+
+    def self.count_tied(division)
+      wins = division.map(&:wins)
+      wins.each_index.select { |i| wins[i] == wins[0] }.count
+    end
+
+  # def self.divisional_tiebreaker(division, tied_teams_count)
+  #   sorted_order, tied_teams = multi_division_tiebreaker(division, tied_teams_count)
+  #   if tied_teams == 1
+  #     return sorted_order
+  #   elsif tied_teams == 2
+  #     head_to_head_tiebreaker(division)
+  #   else
+  #     puts 'three tied'
+  #     return sorted_order #next step
+  #   end
+  # end
 end

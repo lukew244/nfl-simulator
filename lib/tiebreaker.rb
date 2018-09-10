@@ -4,71 +4,76 @@ class Tiebreaker
 
   def rank_division(division_as_array)
     division_in_win_order = order_by_wins(division_as_array)
-    tied_teams = count_tied(division_in_win_order)
-    if tied_teams == 1
+    tied_teams, eliminated = split_eliminated(division_in_win_order)
+    if tied_teams.count == 1
       return division_in_win_order
-    elsif tied_teams == 2
-      head_to_head_tiebreaker(division_in_win_order)
+    elsif tied_teams.count == 2
+      head_to_head_tiebreaker(tied_teams) + eliminated
     else
-      MultiTiebreaker.division(division_in_win_order, tied_teams, self)
+      MultiTiebreaker.division(tied_teams, self) + eliminated
     end
   end
 
-  def head_to_head_tiebreaker(division)
-    first_team_advantage = head_to_head(division)
-    run_tiebreaker(first_team_advantage, division) {|division| division_wins_tiebreaker(division)}
+  def split_eliminated(teams)
+    tied_count = count_tied(teams)
+    teams.partition.with_index { |_, index| index < tied_count }
   end
 
-  def division_wins_tiebreaker(division)
-    first_team_advantage = division_wins(division)
-    run_tiebreaker(first_team_advantage, division) {|division| common_games_tiebreaker(division)}
+  def head_to_head_tiebreaker(teams)
+    first_team_advantage = head_to_head(teams)
+    run_tiebreaker(first_team_advantage, teams) {|teams| division_wins_tiebreaker(teams)}
   end
 
-  def common_games_tiebreaker(division)
-    first_team_advantage = common_games(division)
-    run_tiebreaker(first_team_advantage, division) {|division| conference_wins_tiebreaker(division) }
+  def division_wins_tiebreaker(teams)
+    first_team_advantage = division_wins(teams)
+    run_tiebreaker(first_team_advantage, teams) {|teams| common_games_tiebreaker(teams)}
   end
 
-  def conference_wins_tiebreaker(division)
-    first_team_advantage = conference_wins(division)
-    run_tiebreaker(first_team_advantage, division) {|division| coin_toss(division) }
+  def common_games_tiebreaker(teams)
+    first_team_advantage = common_games(teams)
+    run_tiebreaker(first_team_advantage, teams) {|teams| conference_wins_tiebreaker(teams) }
   end
 
-  def coin_toss(division)
-    return division
+  def conference_wins_tiebreaker(teams)
+    first_team_advantage = conference_wins(teams)
+    run_tiebreaker(first_team_advantage, teams) {|teams| coin_toss(teams) }
   end
 
-  def run_tiebreaker(first_team_advantage, division)
+  def coin_toss(teams)
+    return teams
+  end
+
+  def run_tiebreaker(first_team_advantage, teams)
     if first_team_advantage > 0
-      return division
+      return teams
     elsif first_team_advantage < 0
-      return switch_order(division)
+      return switch_order(teams)
     else
-      yield(division)
+      yield(teams)
     end
   end
 
-  def head_to_head(division)
-    division[0].teams_beat.count { |beat| beat == division[1].name } -
-    division[1].teams_beat.count { |beat| beat == division[0].name }
+  def head_to_head(tied)
+    tied.first.teams_beat.count { |beat| beat == tied.last.name } -
+    tied.last.teams_beat.count { |beat| beat == tied.first.name }
   end
 
-  def division_wins(division)
-    division[0].division_wins - division[1].division_wins
+  def division_wins(tied)
+    tied.first.division_wins - tied.last.division_wins
   end
 
-  def common_games(division)
-    common = NFL::NON_DIV_OPPONENTS[division[0].name] & NFL::NON_DIV_OPPONENTS[division[1].name]
-    (common & division[0].teams_beat).count - (common & division[1].teams_beat).count
+  def common_games(tied)
+    common = NFL::NON_DIV_OPPONENTS[tied.first.name] & NFL::NON_DIV_OPPONENTS[tied.last.name]
+    (common & tied.first.teams_beat).count - (common & tied.last.teams_beat).count
   end
 
-  def conference_wins(division)
-    division[0].conference_wins - division[1].conference_wins
+  def conference_wins(tied)
+    tied.first.conference_wins - tied.last.conference_wins
   end
 
-  def switch_order(division)
-    division[0], division[1] = division[1], division[0]
-    division
+  def switch_order(tied)
+    tied[0], tied[1] = tied[1], tied[0]
+    tied
   end
 
   def count_tied(division)
