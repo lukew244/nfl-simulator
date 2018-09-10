@@ -7,7 +7,7 @@ module PostseasonCalculator
     potential_wildcards = []
     tiebreaker = Tiebreaker.new
     NFL::DIVISIONS.each do |division|
-      rankings = tiebreaker.rank_division(division)
+      rankings = tiebreaker.rank_division(division.last)
       division_winners    << rankings[0]
       potential_wildcards << rankings[1]
       potential_wildcards << rankings[2]

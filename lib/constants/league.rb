@@ -1,5 +1,5 @@
 module NFL
-
+  
   CONFERENCES = {
     NFC: [],
     AFC: []

@@ -1,12 +1,9 @@
-require_relative './fixtures'
+require_relative './constants/fixtures'
 require_relative './game'
 require_relative './postseason_calculator'
 
 class Season
-  attr_reader :team_wins, :postseason_calculator
-
-  def initialize()
-  end
+  attr_reader :postseason_calculator
 
   def run
     reset_teams
@@ -16,8 +13,7 @@ class Season
   end
 
   def play_regular_season
-    results = FIXTURES.map { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
-    # save_wins(results)
+    results = NFL::FIXTURES.map { |f| Game.play(Team.find(f[:home]), Team.find(f[:away]))}
   end
 
   def play_postseason(afc, nfc)
@@ -41,10 +37,6 @@ class Season
     divisional_winner_1 = Game.postseason(seed[0], wildcard_winners.last)
     divisional_winner_2 = Game.postseason(seed[1], wildcard_winners.first)
     seed_teams([divisional_winner_1, divisional_winner_2])
-  end
-
-  def save_wins(results)
-    results.map { |result| team_wins[result[0]] << result[1] }
   end
 
   def seed_teams(teams)
