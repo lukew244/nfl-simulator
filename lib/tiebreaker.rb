@@ -9,14 +9,10 @@ module Tiebreaker
     if tied_teams.count == 1
       return division_in_win_order
     elsif tied_teams.count == 2
-      two_way_tiebreaker(tied_teams) + eliminated
+      SingleTiebreaker.run(tied_teams) + eliminated
     else
-      MultiTiebreaker.division(tied_teams, self) + eliminated
+      MultiTiebreaker.division(tied_teams) + eliminated
     end
-  end
-
-  def two_way_tiebreaker(teams)
-    SingleTiebreaker.run(teams)
   end
 
   def split_eliminated(teams)

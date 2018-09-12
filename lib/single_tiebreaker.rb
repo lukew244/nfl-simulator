@@ -6,8 +6,12 @@ module SingleTiebreaker
   TIEBREAKERS = %w[head_to_head division_wins common_games conference_wins coin_toss]
 
   def run(teams)
-    first_team_advantage = TIEBREAKERS.find { |tb| tb = self.send(tb, teams); break tb if tb != 0 }
+    first_team_advantage = find_successful_tiebreaker(teams)
     sort_teams(first_team_advantage, teams)
+  end
+
+  def find_successful_tiebreaker(teams)
+    TIEBREAKERS.find { |tb| tb = self.send(tb, teams); break tb if tb != 0 }
   end
 
   def sort_teams(first_team_advantage, teams)
