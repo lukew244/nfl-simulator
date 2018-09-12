@@ -2,16 +2,23 @@ require_relative './constants/non_div_opponents'
 require_relative './multi_tiebreaker'
 class Tiebreaker
 
+  DIVISION_TIEBREAKERS = ['head_to_head', 'division_wins', 'common_games', 'conference_wins', 'coin_toss']
+
   def rank_division(division_as_array)
     division_in_win_order = order_by_wins(division_as_array)
     tied_teams, eliminated = split_eliminated(division_in_win_order)
     if tied_teams.count == 1
       return division_in_win_order
     elsif tied_teams.count == 2
-      head_to_head_tiebreaker(tied_teams) + eliminated
+      two_way_tiebreaker(tied_teams) + eliminated
     else
       MultiTiebreaker.division(tied_teams, self) + eliminated
     end
+  end
+
+  def two_way_tiebreaker(teams)
+    first_team_advantage = DIVISION_TIEBREAKERS.find { |tb| tb = self.send(tb.to_sym, teams); break tb if tb != 0 }
+    sort_teams(first_team_advantage, teams)
   end
 
   def split_eliminated(teams)
@@ -19,38 +26,8 @@ class Tiebreaker
     teams.partition.with_index { |_, index| index < tied_count }
   end
 
-  def head_to_head_tiebreaker(teams)
-    first_team_advantage = head_to_head(teams)
-    run_tiebreaker(first_team_advantage, teams) {|teams| division_wins_tiebreaker(teams)}
-  end
-
-  def division_wins_tiebreaker(teams)
-    first_team_advantage = division_wins(teams)
-    run_tiebreaker(first_team_advantage, teams) {|teams| common_games_tiebreaker(teams)}
-  end
-
-  def common_games_tiebreaker(teams)
-    first_team_advantage = common_games(teams)
-    run_tiebreaker(first_team_advantage, teams) {|teams| conference_wins_tiebreaker(teams) }
-  end
-
-  def conference_wins_tiebreaker(teams)
-    first_team_advantage = conference_wins(teams)
-    run_tiebreaker(first_team_advantage, teams) {|teams| coin_toss(teams) }
-  end
-
-  def coin_toss(teams)
-    return teams
-  end
-
-  def run_tiebreaker(first_team_advantage, teams)
-    if first_team_advantage > 0
-      return teams
-    elsif first_team_advantage < 0
-      return switch_order(teams)
-    else
-      yield(teams)
-    end
+  def sort_teams(first_team_advantage, teams)
+    first_team_advantage > 0 ? teams : switch_order(teams)
   end
 
   def head_to_head(tied)
@@ -64,11 +41,15 @@ class Tiebreaker
 
   def common_games(tied)
     common = NFL::NON_DIV_OPPONENTS[tied.first.name] & NFL::NON_DIV_OPPONENTS[tied.last.name]
-    (common & tied.first.teams_beat).count - (common & tied.last.teams_beat).count
+    (common & tied.first.teams_beat).count - (common & tied.last.teams_beat).count #BUG: set intersection expects unique entries
   end
 
   def conference_wins(tied)
     tied.first.conference_wins - tied.last.conference_wins
+  end
+
+  def coin_toss(teams)
+    return 1
   end
 
   def switch_order(tied)
