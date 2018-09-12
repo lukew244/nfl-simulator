@@ -1,12 +1,11 @@
 module MultiTiebreaker
   extend self
 
-  TIEBREAKERS = ['head_to_head', 'coin_toss']
-# , 'division_wins', 'common_games', 'conference_wins',
+  TIEBREAKERS = %w[head_to_head division_wins conference_wins coin_toss]
+  # 'common_games'
 
   def division(teams, tiebreaker)
-    teams_and_records = TIEBREAKERS.find { |tb| tb = self.send(tb.to_sym, teams); break tb if tb.last != 1 }
-    teams_and_records.pop
+    teams_and_records = TIEBREAKERS.find { |tb| tb = self.send(tb, teams); break tb if tb.last != 0 }
     tied_teams, eliminated = split_eliminated(teams_and_records)
     if tied_teams.count == 1
       return (tied_teams + eliminated).flatten
@@ -18,23 +17,34 @@ module MultiTiebreaker
   end
 
   def head_to_head(teams)
-    team_names = teams.map(&:name)
-    wins = teams.map do |team|
-      count = team.teams_beat.count { |beat| team_names.include?(beat) }
-      [team, count]
-    end
-    wins << wins.map(&:last).uniq.count
+    wins = teams.map { |team| head_to_head_wins(team, teams.map(&:name)) }
+    wins << teams.count - count_tied(wins)
+  end
+
+  def division_wins(teams)
+    wins = teams.map { |team| [team, team.division_wins] }
+    wins << teams.count - count_tied(wins)
+  end
+
+  def conference_wins(teams)
+    wins = teams.map { |team| [team, team.conference_wins] }
+    wins << teams.count - count_tied(wins)
   end
 
   def coin_toss(teams)
     order = teams.each_with_index.map { |t, i| [t, i] }
-    order << 0
+    order << 1
   end
 
   def split_eliminated(teams)
-    tied_count = count_tied(teams)
-    teams = teams.sort_by(&:last).reverse.map(&:first)
+    tied_count = teams.pop
+    teams = order(teams)
     teams.partition.with_index { |_, index| index < tied_count }
+  end
+
+  def head_to_head_wins(team, tied_teams)
+    count = team.teams_beat.count { |beat| tied_teams.include?(beat) }
+    [team, count]
   end
 
   def count_tied(teams)
@@ -43,5 +53,9 @@ module MultiTiebreaker
 
   def best_record(teams_in_order)
     teams_in_order[0][1]
+  end
+
+  def order(teams)
+    teams.sort_by(&:last).reverse.map(&:first)
   end
 end

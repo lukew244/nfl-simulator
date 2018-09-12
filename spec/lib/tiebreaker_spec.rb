@@ -1,7 +1,7 @@
 require "./lib/tiebreaker"
 
 RSpec.describe Tiebreaker do
-  subject { described_class.new }
+  subject { described_class }
 
   it "returns clear winner" do
     division = [
@@ -74,6 +74,28 @@ RSpec.describe Tiebreaker do
     ]
     ranked = subject.rank_division(division)
     expect(ranked[0].name).to eq "Tennessee Titans"
+  end
+
+  it "returns multiway division winner" do
+    division = [
+      build(:team, name: "Jacksonville Jaguars", wins: 9, teams_beat: ["Tennessee Titans"], division_wins: 3),
+      build(:team, name: "Tennessee Titans", wins: 9, teams_beat: ["Jacksonville Jaguars"]),
+      build(:team, name: "Indianapolis Colts", wins: 9, teams_beat: ["Tennessee Titans"]),
+      build(:team, name: "Houston Texans")
+    ]
+    ranked = subject.rank_division(division)
+    expect(ranked[0].name).to eq "Jacksonville Jaguars"
+  end
+
+  it "returns multiway conference winner" do
+    division = [
+      build(:team, name: "Jacksonville Jaguars", wins: 9, teams_beat: ["Tennessee Titans"], conference_wins: 3),
+      build(:team, name: "Tennessee Titans", wins: 9, teams_beat: ["Jacksonville Jaguars"]),
+      build(:team, name: "Indianapolis Colts", wins: 9, teams_beat: ["Tennessee Titans"]),
+      build(:team, name: "Houston Texans")
+    ]
+    ranked = subject.rank_division(division)
+    expect(ranked[0].name).to eq "Jacksonville Jaguars"
   end
 
 end
