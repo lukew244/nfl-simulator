@@ -5,7 +5,7 @@ require_relative './team'
 class Simulator
   attr_reader :season, :superbowl_wins
 
-  SIMULATIONS = 15000
+  SIMULATIONS = 1000
 
   def initialize
     @season = Season.new

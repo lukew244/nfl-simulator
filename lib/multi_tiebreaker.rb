@@ -3,6 +3,7 @@ module MultiTiebreaker
 
   TIEBREAKERS = %w[head_to_head division_wins conference_wins coin_toss]
   # 'common_games'
+  DIV_WINNER_TIEBREAKERS = %w[head_to_head conference_wins coin_toss]
 
   def division(teams)
     teams_and_records = find_successful_tiebreaker(teams)
@@ -16,8 +17,20 @@ module MultiTiebreaker
     end
   end
 
-  def find_successful_tiebreaker(teams)
-    TIEBREAKERS.find { |tb| tb = self.send(tb, teams); break tb if tb.last != 0 }
+  def playoff(teams)
+    teams_and_records = find_successful_tiebreaker(teams, DIV_WINNER_TIEBREAKERS)
+    tied_teams, eliminated = split_eliminated(teams_and_records)
+    if tied_teams.count == 1
+      return (tied_teams + eliminated).flatten
+    elsif tied_teams.count == 2
+      (SingleTiebreaker.run(tied_teams) + eliminated).flatten
+    else
+      return division(tied_teams)
+    end
+  end
+
+  def find_successful_tiebreaker(teams, tiebreakers=TIEBREAKERS)
+    tiebreakers.find { |tb| tb = self.send(tb, teams); break tb if tb.last != 0 }
   end
 
   def head_to_head(teams)
