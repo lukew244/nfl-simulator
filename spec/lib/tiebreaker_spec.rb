@@ -1,4 +1,4 @@
-require "./lib/tiebreaker"
+require "./lib/tiebreakers/tiebreaker"
 
 RSpec.describe Tiebreaker do
   subject { described_class }

@@ -1,4 +1,4 @@
-require "./lib/playoff_seeder"
+require "./lib/tiebreakers/playoff_seeder"
 
 RSpec.describe PlayoffSeeder do
   subject { described_class }

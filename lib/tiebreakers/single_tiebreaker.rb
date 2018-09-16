@@ -1,4 +1,4 @@
-require_relative './constants/non_div_opponents'
+require_relative '../constants/non_div_opponents'
 
 module SingleTiebreaker
   extend self

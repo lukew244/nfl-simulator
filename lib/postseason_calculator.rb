@@ -1,5 +1,5 @@
-require_relative './tiebreaker'
-require_relative './playoff_seeder'
+require_relative './tiebreakers/tiebreaker'
+require_relative './tiebreakers/playoff_seeder'
 
 module PostseasonCalculator
   extend self
