@@ -40,9 +40,9 @@ module PlayoffSeeder
 
   def two_way_tiebreaker(teams)
     if teams.first.division == teams.last.division
-      SingleTiebreaker.run(tied_for_place)
+      SingleTiebreaker.run(teams)
     else
-      SingleTiebreaker.division_winners(tied_for_place)
+      SingleTiebreaker.division_winners(teams)
     end
   end
 

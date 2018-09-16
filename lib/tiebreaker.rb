@@ -11,7 +11,7 @@ module Tiebreaker
     elsif tied_teams.count == 2
       SingleTiebreaker.run(tied_teams) + eliminated
     else
-      MultiTiebreaker.division(tied_teams) + eliminated
+      MultiTiebreaker.run(tied_teams) + eliminated
     end
   end
 

@@ -5,7 +5,7 @@ require_relative './team'
 class Simulator
   attr_reader :season, :superbowl_wins
 
-  SIMULATIONS = 1000
+  SIMULATIONS = 1
 
   def initialize
     @season = Season.new
@@ -29,7 +29,7 @@ class Simulator
   def create_teams
     NFL::TEAMS.each do |team_data|
       team = create_team(team_data)
-      add_to_league(team, team_data[:conference], team_data[:division])
+      add_to_league(team, team_data[:division])
     end
   end
 
@@ -37,8 +37,7 @@ class Simulator
     Team.new(team[:name], team[:conference], team[:division], team[:weighting])
   end
 
-  def add_to_league(team, conference, division)
-    NFL::CONFERENCES[conference.to_sym] << team
+  def add_to_league(team, division)
     NFL::DIVISIONS[division.to_sym] << team
   end
 

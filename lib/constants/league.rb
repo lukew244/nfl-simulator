@@ -1,9 +1,5 @@
 module NFL
-  
-  CONFERENCES = {
-    NFC: [],
-    AFC: []
-  }
+
   DIVISIONS = {
     AFC_EAST: [],
     AFC_WEST: [],
@@ -14,6 +10,8 @@ module NFL
     NFC_NORTH: [],
     NFC_SOUTH: []
   }
+
+  AFC, NFC = DIVISIONS.partition.with_index { |_, index| index <= 3 }
 
   TEAMS = [
     {:name=>"Arizona Cardinals", :weighting=>1, :conference=>"NFC", :division=>"NFC_WEST"},
